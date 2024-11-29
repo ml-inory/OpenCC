@@ -36,6 +36,7 @@ option(USE_SYSTEM_MARISA "Use system version of Marisa" OFF)
 option(USE_SYSTEM_PYBIND11 "Use system version of pybind11" OFF)
 option(USE_SYSTEM_RAPIDJSON "Use system version of RapidJSON" OFF)
 option(USE_SYSTEM_TCLAP "Use system version of TCLAP" OFF)
+option(BUILD_DATA "Execute dict bin to generate dict" OFF)
 
 ######## Package information
 set (PACKAGE_URL https://github.com/BYVoid/OpenCC)

@@ -98,68 +98,70 @@ set(
   ${DICT_REVERSE_BIN} ${DICT_JPVariantsRev_GENERATING_INPUT} JPVariantsRev.txt
 )
 
-foreach(DICT ${DICTS_GENERATED})
-  add_custom_command(
-    OUTPUT
-      ${DICT}.txt
+if (BUILD_DATA)
+  foreach(DICT ${DICTS_GENERATED})
+    add_custom_command(
+      OUTPUT
+        ${DICT}.txt
+      COMMENT
+        "Generating ${DICT}.txt"
+      COMMAND
+        ${DICT_${DICT}_GENERATING_COMMAND}
+      DEPENDS
+        ${DICT_${DICT}_GENERATING_INPUT}
+    )
+    set_directory_properties(
+      PROPERTIES
+        ADDITIONAL_MAKE_CLEAN_FILES
+          "${DICT_GENERATED_DIR}/${DICT}.txt"
+    )
+  endforeach(DICT)
+
+  add_custom_target(
+    copy_libopencc_to_dir_of_opencc_dict
     COMMENT
-      "Generating ${DICT}.txt"
+      "Copying libopencc to directory of opencc_dict"
     COMMAND
-      ${DICT_${DICT}_GENERATING_COMMAND}
-    DEPENDS
-      ${DICT_${DICT}_GENERATING_INPUT}
+      ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:libopencc>" "$<TARGET_FILE_DIR:${OPENCC_DICT_BIN}>"
   )
-  set_directory_properties(
-    PROPERTIES
-      ADDITIONAL_MAKE_CLEAN_FILES
-        "${DICT_GENERATED_DIR}/${DICT}.txt"
-  )
-endforeach(DICT)
+  if (WIN32)
+    set(DICT_WIN32_DEPENDS copy_libopencc_to_dir_of_opencc_dict)
+  else()
+    set(DICT_WIN32_DEPENDS)
+  endif()
 
-add_custom_target(
-  copy_libopencc_to_dir_of_opencc_dict
-  COMMENT
-    "Copying libopencc to directory of opencc_dict"
-  COMMAND
-    ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:libopencc>" "$<TARGET_FILE_DIR:${OPENCC_DICT_BIN}>"
-)
-if (WIN32)
-  set(DICT_WIN32_DEPENDS copy_libopencc_to_dir_of_opencc_dict)
-else()
-  set(DICT_WIN32_DEPENDS)
-endif()
+  foreach(DICT ${DICTS})
+    add_custom_command(
+      OUTPUT
+        ${DICT}.ocd2
+      COMMENT
+        "Building ${DICT}.ocd2"
+      COMMAND
+        ${OPENCC_DICT_BIN}
+          --input ${DICT_${DICT}_INPUT}
+          --output ${DICT}.ocd2
+          --from text
+          --to ocd2
+      DEPENDS
+        ${DICT_WIN32_DEPENDS}
+        ${OPENCC_DICT_BIN}
+        ${DICT_${DICT}_INPUT}
+    )
 
-foreach(DICT ${DICTS})
-  add_custom_command(
-    OUTPUT
-      ${DICT}.ocd2
-    COMMENT
-      "Building ${DICT}.ocd2"
-    COMMAND
-      ${OPENCC_DICT_BIN}
-        --input ${DICT_${DICT}_INPUT}
-        --output ${DICT}.ocd2
-        --from text
-        --to ocd2
-    DEPENDS
-      ${DICT_WIN32_DEPENDS}
-      ${OPENCC_DICT_BIN}
-      ${DICT_${DICT}_INPUT}
-  )
+    install(
+      FILES
+        ${DICT_GENERATED_DIR}/${DICT}.ocd2
+      DESTINATION
+        ${DIR_SHARE_OPENCC}
+    )
 
-  install(
-    FILES
-      ${DICT_GENERATED_DIR}/${DICT}.ocd2
-    DESTINATION
-      ${DIR_SHARE_OPENCC}
-  )
-
-  set_directory_properties(
-    PROPERTIES
-      ADDITIONAL_MAKE_CLEAN_FILES
-        "${DICT_GENERATED_DIR}/${DICT}.ocd2"
-  )
-endforeach(DICT)
+    set_directory_properties(
+      PROPERTIES
+        ADDITIONAL_MAKE_CLEAN_FILES
+          "${DICT_GENERATED_DIR}/${DICT}.ocd2"
+    )
+  endforeach(DICT)
+endif()  
 
 set(CONFIG_FILES
   config/hk2s.json
