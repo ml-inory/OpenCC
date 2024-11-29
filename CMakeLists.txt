@@ -223,8 +223,10 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(doc)
-add_subdirectory(data)
-add_subdirectory(test)
+if (BUILD_DATA)  
+  add_subdirectory(data)
+endif()  
+# add_subdirectory(test)
 
 ######## Testing
 
